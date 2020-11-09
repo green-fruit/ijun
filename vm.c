@@ -25,10 +25,10 @@ void print(pagetable_t);
 void
 kvminit()
 {
-  kernel_pagetable = (pagetable_t) kalloc();
+  kernel_pagetable = (pagetable_t) kalloc();  // kalloc空闲页面
   memset(kernel_pagetable, 0, PGSIZE);
 
-  // uart registers
+  // uart registers 等值映射
   kvmmap(UART0, UART0, PGSIZE, PTE_R | PTE_W);
 
   // virtio mmio disk interface 0
@@ -57,10 +57,10 @@ kvminit()
 // Switch h/w page table register to the kernel's page table,
 // and enable paging.
 void
-kvminithart()
+kvminithart()  //hart硬件线程
 {
-  w_satp(MAKE_SATP(kernel_pagetable));
-  sfence_vma();
+  w_satp(MAKE_SATP(kernel_pagetable));  // 写
+  sfence_vma();  // 刷新tlb
 }
 
 // Return the address of the PTE in page table pagetable
@@ -82,6 +82,7 @@ walk(pagetable_t pagetable, uint64 va, int alloc)
     panic("walk");
 
   for(int level = 2; level > 0; level--) {
+    // 找到虚拟地址对应的页表条目
     pte_t *pte = &pagetable[PX(level, va)];
     if(*pte & PTE_V) {
       pagetable = (pagetable_t)PTE2PA(*pte);
@@ -155,6 +156,7 @@ kvmpa(uint64 va)
 int
 mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 {
+  // 把页表条目内写上对应的物理地址
   uint64 a, last;
   pte_t *pte;
 
@@ -286,6 +288,7 @@ uvmdealloc(pagetable_t pagetable, uint64 oldsz, uint64 newsz)
 static void
 freewalk(pagetable_t pagetable)
 {
+  // 递归释放页表
   // there are 2^9 = 512 PTEs in a page table.
   for(int i = 0; i < 512; i++){
     pte_t pte = pagetable[i];
@@ -319,6 +322,7 @@ uvmfree(pagetable_t pagetable, uint64 sz)
 int
 uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
+  // fork时使用
   pte_t *pte;
   uint64 pa, i;
   uint flags;
