@@ -4,10 +4,10 @@
 // based on qemu's hw/riscv/virt.c:
 //
 // 00001000 -- boot ROM, provided by qemu
-// 02000000 -- CLINT
-// 0C000000 -- PLIC
-// 10000000 -- uart0 
-// 10001000 -- virtio disk 
+// 02000000 -- CLINT  // 中断
+// 0C000000 -- PLIC  // 中断
+// 10000000 -- uart0 // 串口
+// 10001000 -- virtio disk // 磁盘
 // 80000000 -- boot ROM jumps here in machine mode
 //             -kernel loads the kernel here
 // unused RAM after 80000000.
@@ -45,8 +45,8 @@
 // the kernel expects there to be RAM
 // for use by the kernel and user pages
 // from physical address 0x80000000 to PHYSTOP.
-#define KERNBASE 0x80000000L
-#define PHYSTOP (KERNBASE + 128*1024*1024)
+#define KERNBASE 0x80000000L  // 2G
+#define PHYSTOP (KERNBASE + 128*1024*1024)  //2G+128mb
 
 // map the trampoline page to the highest address,
 // in both user and kernel space.
